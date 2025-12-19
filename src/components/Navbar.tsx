@@ -1,11 +1,23 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, ShoppingBag, User, Search, Sparkles } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, ShoppingBag, User, Search, Sparkles, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { cartCount } = useCart();
+  const navigate = useNavigate();
 
   const navLinks = [
     { name: "Shop", href: "/shop" },
@@ -13,6 +25,11 @@ const Navbar = () => {
     { name: "How It Works", href: "/#how-it-works" },
     { name: "About", href: "/about" },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -47,18 +64,66 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <Search className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <User className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem className="text-sm text-muted-foreground">
+                    {user.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/orders')}>
+                    My Orders
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => navigate('/auth')}
+              >
+                <User className="h-5 w-5" />
+              </Button>
+            )}
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-muted-foreground hover:text-foreground relative"
+              onClick={() => navigate('/cart')}
+            >
               <ShoppingBag className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
-                0
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </Button>
-            <Button variant="gold" size="sm">
-              Get Started
-            </Button>
+
+            {user ? (
+              <Button variant="gold" size="sm" onClick={() => navigate('/try-on')}>
+                Try On
+              </Button>
+            ) : (
+              <Button variant="gold" size="sm" onClick={() => navigate('/auth')}>
+                Get Started
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -89,12 +154,25 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="flex items-center gap-4 pt-4 border-t border-border">
-              <Button variant="outline" className="flex-1">
-                Sign In
-              </Button>
-              <Button variant="gold" className="flex-1">
-                Get Started
-              </Button>
+              {user ? (
+                <>
+                  <Button variant="outline" className="flex-1" onClick={handleSignOut}>
+                    Sign Out
+                  </Button>
+                  <Button variant="gold" className="flex-1" onClick={() => { setIsOpen(false); navigate('/try-on'); }}>
+                    Try On
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" className="flex-1" onClick={() => { setIsOpen(false); navigate('/auth'); }}>
+                    Sign In
+                  </Button>
+                  <Button variant="gold" className="flex-1" onClick={() => { setIsOpen(false); navigate('/auth'); }}>
+                    Get Started
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

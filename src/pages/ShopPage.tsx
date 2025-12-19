@@ -1,120 +1,62 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Heart, ShoppingBag, Filter, ChevronDown, Grid3X3, LayoutGrid } from "lucide-react";
+import { Heart, ShoppingBag, Filter, ChevronDown, Grid3X3, LayoutGrid, Loader2 } from "lucide-react";
+import { useProducts } from "@/hooks/useProducts";
+import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-interface Product {
-  id: number;
-  name: string;
-  brand: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  category: string;
-  isNew?: boolean;
-  colors: string[];
-}
-
-const allProducts: Product[] = [
-  {
-    id: 1,
-    name: "Tailored Wool Blazer",
-    brand: "Modern Classics",
-    price: 299,
-    originalPrice: 399,
-    image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop",
-    category: "Outerwear",
-    isNew: true,
-    colors: ["#1a1a1a", "#4a4a4a", "#8b7355"],
-  },
-  {
-    id: 2,
-    name: "Silk Evening Dress",
-    brand: "Elegance",
-    price: 459,
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop",
-    category: "Dresses",
-    colors: ["#2d2d2d", "#8b0000"],
-  },
-  {
-    id: 3,
-    name: "Premium Cotton Shirt",
-    brand: "Essential",
-    price: 129,
-    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop",
-    category: "Tops",
-    isNew: true,
-    colors: ["#ffffff", "#87ceeb", "#ffc0cb"],
-  },
-  {
-    id: 4,
-    name: "High-Waist Trousers",
-    brand: "Modern Classics",
-    price: 189,
-    originalPrice: 249,
-    image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&auto=format&fit=crop",
-    category: "Bottoms",
-    colors: ["#1a1a1a", "#f5f5dc"],
-  },
-  {
-    id: 5,
-    name: "Cashmere Sweater",
-    brand: "Luxe Knit",
-    price: 349,
-    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&auto=format&fit=crop",
-    category: "Knitwear",
-    colors: ["#d3d3d3", "#8b4513", "#000080"],
-  },
-  {
-    id: 6,
-    name: "Leather Midi Skirt",
-    brand: "Edge",
-    price: 279,
-    image: "https://images.unsplash.com/photo-1583496661160-fb5886a0uf7a?w=600&auto=format&fit=crop",
-    category: "Bottoms",
-    isNew: true,
-    colors: ["#1a1a1a", "#8b0000"],
-  },
-  {
-    id: 7,
-    name: "Linen Summer Dress",
-    brand: "Coastal",
-    price: 199,
-    image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600&auto=format&fit=crop",
-    category: "Dresses",
-    colors: ["#ffffff", "#f0e68c"],
-  },
-  {
-    id: 8,
-    name: "Structured Coat",
-    brand: "Modern Classics",
-    price: 549,
-    originalPrice: 699,
-    image: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600&auto=format&fit=crop",
-    category: "Outerwear",
-    colors: ["#2f4f4f", "#1a1a1a"],
-  },
-  {
-    id: 9,
-    name: "Silk Blouse",
-    brand: "Elegance",
-    price: 189,
-    image: "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=600&auto=format&fit=crop",
-    category: "Tops",
-    colors: ["#fffafa", "#e6e6fa"],
-  },
-];
-
-const categories = ["All", "Dresses", "Tops", "Bottoms", "Outerwear", "Knitwear"];
+const categories = ["All", "Blazers", "Dresses", "Trousers", "Shirts", "Sweaters", "Jackets"];
 
 const ShopPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [gridView, setGridView] = useState<"small" | "large">("large");
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
+  
+  const { data: products, isLoading } = useProducts(selectedCategory);
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const filteredProducts = selectedCategory === "All" 
-    ? allProducts 
-    : allProducts.filter(p => p.category === selectedCategory);
+  const handleAddToCart = () => {
+    if (!user) {
+      toast.error("Please sign in to add items to cart");
+      navigate('/auth');
+      return;
+    }
+    if (!selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    addToCart.mutate({
+      productId: selectedProduct.id,
+      size: selectedSize,
+      color: selectedColor,
+    });
+    setSelectedProduct(null);
+    setSelectedSize("");
+    setSelectedColor("");
+  };
+
+  const handleTryOn = (productId: string) => {
+    if (!user) {
+      toast.error("Please sign in to use virtual try-on");
+      navigate('/auth');
+      return;
+    }
+    navigate(`/try-on?product=${productId}`);
+  };
 
   return (
     <main className="min-h-screen">
@@ -175,90 +117,89 @@ const ShopPage = () => {
           {/* Results Count */}
           <div className="py-4">
             <p className="text-sm text-muted-foreground">
-              Showing {filteredProducts.length} products
+              Showing {products?.length || 0} products
             </p>
           </div>
 
+          {/* Loading */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-accent" />
+            </div>
+          )}
+
           {/* Products Grid */}
-          <div className={`grid gap-6 md:gap-8 ${
-            gridView === "large" ? "grid-cols-2 md:grid-cols-3" : "grid-cols-2 md:grid-cols-4"
-          }`}>
-            {filteredProducts.map((product) => (
-              <div key={product.id} className="group relative">
-                {/* Image Container */}
-                <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted mb-4">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300" />
-                  
-                  {/* Quick Actions */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-md">
-                      <Heart className="h-5 w-5 text-foreground" />
-                    </button>
-                    <button className="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-md">
-                      <ShoppingBag className="h-5 w-5 text-foreground" />
-                    </button>
+          {!isLoading && (
+            <div className={`grid gap-6 md:gap-8 ${
+              gridView === "large" ? "grid-cols-2 md:grid-cols-3" : "grid-cols-2 md:grid-cols-4"
+            }`}>
+              {products?.map((product) => (
+                <div key={product.id} className="group relative">
+                  {/* Image Container */}
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted mb-4">
+                    <img
+                      src={product.images?.[0] || "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500"}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300" />
+                    
+                    {/* Quick Actions */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button className="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-md">
+                        <Heart className="h-5 w-5 text-foreground" />
+                      </button>
+                      <button 
+                        onClick={() => setSelectedProduct(product)}
+                        className="w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-md"
+                      >
+                        <ShoppingBag className="h-5 w-5 text-foreground" />
+                      </button>
+                    </div>
+
+                    {/* Try On Button */}
+                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                      <Button 
+                        variant="gold" 
+                        className="w-full"
+                        onClick={() => handleTryOn(product.id)}
+                      >
+                        Virtual Try-On
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* Try On Button */}
-                  <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                    <Button variant="gold" className="w-full">
-                      Virtual Try-On
-                    </Button>
-                  </div>
-
-                  {/* Badges */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    {product.isNew && (
-                      <span className="px-3 py-1 bg-accent text-accent-foreground text-xs font-medium rounded-full">
-                        New
-                      </span>
-                    )}
-                    {product.originalPrice && (
-                      <span className="px-3 py-1 bg-destructive text-destructive-foreground text-xs font-medium rounded-full">
-                        Sale
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Product Info */}
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                    {product.brand}
-                  </p>
-                  <h3 className="font-medium mb-2 group-hover:text-accent transition-colors">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">${product.price}</span>
-                      {product.originalPrice && (
-                        <span className="text-sm text-muted-foreground line-through">
-                          ${product.originalPrice}
-                        </span>
+                  {/* Product Info */}
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                      {product.brand}
+                    </p>
+                    <h3 className="font-medium mb-2 group-hover:text-accent transition-colors">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">${Number(product.price).toFixed(0)}</span>
+                      </div>
+                      {product.colors && product.colors.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {product.colors.slice(0, 3).map((color, i) => (
+                            <div
+                              key={i}
+                              className="w-4 h-4 rounded-full border border-border"
+                              style={{ backgroundColor: color.toLowerCase() }}
+                            />
+                          ))}
+                        </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-1">
-                      {product.colors.slice(0, 3).map((color, i) => (
-                        <div
-                          key={i}
-                          className="w-4 h-4 rounded-full border border-border"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Load More */}
           <div className="text-center py-12">
@@ -269,6 +210,80 @@ const ShopPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Add to Cart Dialog */}
+      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add to Cart</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <img 
+                  src={selectedProduct.images?.[0]} 
+                  alt={selectedProduct.name}
+                  className="w-24 h-32 object-cover rounded-lg"
+                />
+                <div>
+                  <p className="text-sm text-muted-foreground">{selectedProduct.brand}</p>
+                  <h3 className="font-medium">{selectedProduct.name}</h3>
+                  <p className="font-semibold mt-2">${Number(selectedProduct.price).toFixed(0)}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Select Size</label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedProduct.sizes?.map((size: string) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        selectedSize === size
+                          ? "border-accent bg-accent/10 text-accent"
+                          : "border-border hover:border-accent/50"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Select Color</label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProduct.colors.map((color: string) => (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                          selectedColor === color
+                            ? "border-accent bg-accent/10 text-accent"
+                            : "border-border hover:border-accent/50"
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                variant="gold" 
+                className="w-full" 
+                onClick={handleAddToCart}
+                disabled={addToCart.isPending}
+              >
+                {addToCart.isPending ? "Adding..." : "Add to Cart"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </main>
