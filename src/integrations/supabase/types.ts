@@ -14,7 +14,205 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cart_items: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          size: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          size: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          size?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          shipping_address: Json | null
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items: Json
+          shipping_address?: Json | null
+          status?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          shipping_address?: Json | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          brand: string | null
+          category: string
+          colors: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          name: string
+          price: number
+          sizes: string[]
+          stock_quantity: number | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          name: string
+          price: number
+          sizes: string[]
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          sizes?: string[]
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          body_measurements: Json | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          style_preferences: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          body_measurements?: Json | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          style_preferences?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          body_measurements?: Json | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          style_preferences?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      try_on_sessions: {
+        Row: {
+          body_analysis: Json | null
+          created_at: string
+          id: string
+          original_photo_url: string
+          product_id: string | null
+          recommended_size: string | null
+          result_photo_url: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          body_analysis?: Json | null
+          created_at?: string
+          id?: string
+          original_photo_url: string
+          product_id?: string | null
+          recommended_size?: string | null
+          result_photo_url?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          body_analysis?: Json | null
+          created_at?: string
+          id?: string
+          original_photo_url?: string
+          product_id?: string | null
+          recommended_size?: string | null
+          result_photo_url?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "try_on_sessions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
