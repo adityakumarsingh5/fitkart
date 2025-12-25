@@ -48,6 +48,7 @@ const TryOnPage = () => {
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const [showMeasurementsDialog, setShowMeasurementsDialog] = useState(false);
   const [sizeRecommendation, setSizeRecommendation] = useState<SizeRecommendation | null>(null);
+  const [showRecommendations, setShowRecommendations] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,16 +63,19 @@ const TryOnPage = () => {
     }
   }, [profile, profileLoading, hasValidMeasurements]);
 
-  // Calculate size recommendation when measurements exist
-  useEffect(() => {
+  // Calculate size recommendation when measurements exist and user clicks button
+  const handleGetRecommendations = () => {
     if (hasValidMeasurements && bodyMeasurements) {
       const recommendation = getRecommendedSize({
         weight: bodyMeasurements.weight!,
         height: bodyMeasurements.height!,
       });
       setSizeRecommendation(recommendation);
+      setShowRecommendations(true);
+    } else {
+      setShowMeasurementsDialog(true);
     }
-  }, [bodyMeasurements, hasValidMeasurements]);
+  };
 
   const handleSaveMeasurements = async (weight: number, height: number) => {
     await updateProfile.mutateAsync({
@@ -256,8 +260,20 @@ const TryOnPage = () => {
                 )}
               </div>
 
-              {/* Your Measurements Card */}
-              {hasValidMeasurements && sizeRecommendation && (
+              {/* Get Recommendations Button */}
+              {hasValidMeasurements && !showRecommendations && (
+                <Button 
+                  variant="gold" 
+                  className="w-full"
+                  onClick={handleGetRecommendations}
+                >
+                  <Scale className="h-4 w-4 mr-2" />
+                  Get Size Recommendations
+                </Button>
+              )}
+
+              {/* Your Measurements Card - Shows after clicking button */}
+              {showRecommendations && sizeRecommendation && (
                 <div className="bg-card rounded-2xl border border-border p-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -412,13 +428,13 @@ const TryOnPage = () => {
                       <p className="text-sm font-medium mb-2">Available Sizes</p>
                       <div className="flex flex-wrap gap-2">
                         {currentProduct.sizes?.map((size) => {
-                          const isRecommended = analysis?.estimatedSize === size || 
-                            (sizeRecommendation?.size === size && !analysis);
+                          const isRecommended = showRecommendations && (analysis?.estimatedSize === size || 
+                            (sizeRecommendation?.size === size && !analysis));
                           return (
                             <span 
                               key={size}
                               className={`px-3 py-1.5 rounded-lg text-sm border ${
-                                isRecommended 
+                                isRecommended
                                   ? 'border-accent bg-accent/10 text-accent font-medium' 
                                   : 'border-border'
                               }`}
