@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile, BodyMeasurements } from "@/hooks/useProfile";
 import { useProduct, useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,8 +16,11 @@ import {
   Check, 
   X,
   ChevronLeft,
-  ChevronRight 
+  ChevronRight,
+  Scale
 } from "lucide-react";
+import WeightHeightDialog from "@/components/WeightHeightDialog";
+import { getRecommendedSize, SizeRecommendation } from "@/lib/sizeRecommendation";
 
 interface BodyAnalysis {
   bodyType: string;
@@ -34,6 +38,7 @@ const TryOnPage = () => {
   const navigate = useNavigate();
   
   const { user, loading: authLoading } = useAuth();
+  const { profile, isLoading: profileLoading, updateProfile } = useProfile();
   const { data: selectedProduct } = useProduct(productId || '');
   const { data: products } = useProducts();
   
@@ -41,8 +46,40 @@ const TryOnPage = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<BodyAnalysis | null>(null);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
+  const [showMeasurementsDialog, setShowMeasurementsDialog] = useState(false);
+  const [sizeRecommendation, setSizeRecommendation] = useState<SizeRecommendation | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Get body measurements from profile
+  const bodyMeasurements = profile?.body_measurements as BodyMeasurements | null;
+  const hasValidMeasurements = bodyMeasurements?.weight && bodyMeasurements?.height;
+
+  // Check if measurements are needed when profile loads
+  useEffect(() => {
+    if (!profileLoading && profile && !hasValidMeasurements) {
+      setShowMeasurementsDialog(true);
+    }
+  }, [profile, profileLoading, hasValidMeasurements]);
+
+  // Calculate size recommendation when measurements exist
+  useEffect(() => {
+    if (hasValidMeasurements && bodyMeasurements) {
+      const recommendation = getRecommendedSize({
+        weight: bodyMeasurements.weight!,
+        height: bodyMeasurements.height!,
+      });
+      setSizeRecommendation(recommendation);
+    }
+  }, [bodyMeasurements, hasValidMeasurements]);
+
+  const handleSaveMeasurements = async (weight: number, height: number) => {
+    await updateProfile.mutateAsync({
+      body_measurements: { weight, height },
+    });
+    setShowMeasurementsDialog(false);
+    toast.success('Measurements saved to your profile!');
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -122,6 +159,13 @@ const TryOnPage = () => {
     <main className="min-h-screen">
       <Navbar />
       
+      {/* Measurements Dialog */}
+      <WeightHeightDialog
+        open={showMeasurementsDialog}
+        onSave={handleSaveMeasurements}
+        initialWeight={bodyMeasurements?.weight}
+        initialHeight={bodyMeasurements?.height}
+      />
       <div className="pt-24 md:pt-28 pb-20">
         <div className="container mx-auto px-4">
           {/* Header */}
@@ -211,6 +255,61 @@ const TryOnPage = () => {
                   </Button>
                 )}
               </div>
+
+              {/* Your Measurements Card */}
+              {hasValidMeasurements && sizeRecommendation && (
+                <div className="bg-card rounded-2xl border border-border p-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                        <Scale className="h-5 w-5 text-accent" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Your Measurements</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {bodyMeasurements?.weight} kg • {bodyMeasurements?.height} cm
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setShowMeasurementsDialog(true)}
+                    >
+                      Update
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 rounded-xl bg-accent/10 text-center">
+                      <p className="text-xs text-muted-foreground">Suggested Size</p>
+                      <p className="font-bold text-accent text-lg">{sizeRecommendation.size}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground">Body Frame</p>
+                      <p className="font-medium capitalize">{sizeRecommendation.bodyFrame}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground">Best Fit</p>
+                      <p className="font-medium capitalize">{sizeRecommendation.fitType}</p>
+                    </div>
+                  </div>
+
+                  {sizeRecommendation.fittingTips.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <h4 className="text-sm font-medium mb-2">Personalized Tips</h4>
+                      <ul className="space-y-1.5">
+                        {sizeRecommendation.fittingTips.slice(0, 3).map((tip, i) => (
+                          <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                            <Check className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Analysis Results */}
               {analysis && (
@@ -305,38 +404,42 @@ const TryOnPage = () => {
                       <p className="text-sm text-muted-foreground">{currentProduct.brand}</p>
                       <h3 className="font-medium text-lg">{currentProduct.name}</h3>
                       <p className="font-semibold text-accent text-xl mt-1">
-                        ${Number(currentProduct.price).toFixed(0)}
+                        ₹{Number(currentProduct.price).toFixed(0)}
                       </p>
                     </div>
                     
                     <div>
                       <p className="text-sm font-medium mb-2">Available Sizes</p>
                       <div className="flex flex-wrap gap-2">
-                        {currentProduct.sizes?.map((size) => (
-                          <span 
-                            key={size}
-                            className={`px-3 py-1.5 rounded-lg text-sm border ${
-                              analysis?.estimatedSize === size 
-                                ? 'border-accent bg-accent/10 text-accent font-medium' 
-                                : 'border-border'
-                            }`}
-                          >
-                            {size}
-                            {analysis?.estimatedSize === size && (
-                              <span className="ml-1 text-xs">✓ Recommended</span>
-                            )}
-                          </span>
-                        ))}
+                        {currentProduct.sizes?.map((size) => {
+                          const isRecommended = analysis?.estimatedSize === size || 
+                            (sizeRecommendation?.size === size && !analysis);
+                          return (
+                            <span 
+                              key={size}
+                              className={`px-3 py-1.5 rounded-lg text-sm border ${
+                                isRecommended 
+                                  ? 'border-accent bg-accent/10 text-accent font-medium' 
+                                  : 'border-border'
+                              }`}
+                            >
+                              {size}
+                              {isRecommended && (
+                                <span className="ml-1 text-xs">✓ Recommended</span>
+                              )}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    {analysis && (
+                    {(analysis || sizeRecommendation) && (
                       <Button 
                         variant="gold" 
                         className="w-full"
                         onClick={() => navigate(`/shop`)}
                       >
-                        Add Size {analysis.estimatedSize} to Cart
+                        Add Size {analysis?.estimatedSize || sizeRecommendation?.size} to Cart
                       </Button>
                     )}
                   </div>
