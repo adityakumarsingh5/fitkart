@@ -9,6 +9,7 @@ import { useReviews } from "@/hooks/useReviews";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/formatCurrency";
 
 interface Product {
   id: string;
@@ -146,7 +147,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                 </span>
               </div>
 
-              <p className="font-display text-3xl font-semibold">${Number(product.price).toFixed(0)}</p>
+              <p className="font-display text-3xl font-semibold">{formatPrice(product.price)}</p>
             </div>
 
             {product.description && (

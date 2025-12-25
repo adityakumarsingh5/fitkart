@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/formatCurrency";
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -194,7 +195,7 @@ const ProductPage = () => {
                   </span>
                 </div>
 
-                <p className="font-display text-4xl font-semibold">${Number(product.price).toFixed(0)}</p>
+                <p className="font-display text-4xl font-semibold">{formatPrice(product.price)}</p>
               </div>
 
               {product.description && (
@@ -316,7 +317,7 @@ const ProductPage = () => {
                 <div className="text-center p-4 rounded-xl bg-muted/50">
                   <Truck className="h-6 w-6 mx-auto mb-2 text-accent" />
                   <p className="text-sm font-medium">Free Shipping</p>
-                  <p className="text-xs text-muted-foreground">On orders over $100</p>
+                  <p className="text-xs text-muted-foreground">On orders over ₹5000</p>
                 </div>
                 <div className="text-center p-4 rounded-xl bg-muted/50">
                   <RotateCcw className="h-6 w-6 mx-auto mb-2 text-accent" />
@@ -381,7 +382,7 @@ const ProductPage = () => {
                   <ul className="text-muted-foreground space-y-3">
                     <li className="flex items-start gap-3">
                       <Truck className="h-5 w-5 text-accent mt-0.5" />
-                      <span>Free standard shipping on orders over $100</span>
+                      <span>Free standard shipping on orders over ₹5000</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Truck className="h-5 w-5 text-accent mt-0.5" />

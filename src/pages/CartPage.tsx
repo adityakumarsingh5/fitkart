@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
+import { formatPrice } from "@/lib/formatCurrency";
 import { useEffect } from "react";
 
 const CartPage = () => {
@@ -105,7 +106,7 @@ const CartPage = () => {
                           </button>
                         </div>
                         <p className="font-semibold">
-                          ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                          {formatPrice((item.product?.price || 0) * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -121,20 +122,20 @@ const CartPage = () => {
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>${cartTotal.toFixed(2)}</span>
+                      <span>{formatPrice(cartTotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Shipping</span>
                       <span>Free</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span>${(cartTotal * 0.1).toFixed(2)}</span>
+                      <span className="text-muted-foreground">Tax (18% GST)</span>
+                      <span>{formatPrice(cartTotal * 0.18)}</span>
                     </div>
                     <div className="border-t border-border pt-3">
                       <div className="flex justify-between font-semibold">
                         <span>Total</span>
-                        <span>${(cartTotal * 1.1).toFixed(2)}</span>
+                        <span>{formatPrice(cartTotal * 1.18)}</span>
                       </div>
                     </div>
                   </div>
@@ -145,7 +146,7 @@ const CartPage = () => {
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center mt-4">
-                    Free shipping on orders over $100
+                    Free shipping on orders over ₹5000
                   </p>
                 </div>
               </div>

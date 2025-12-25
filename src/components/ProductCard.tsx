@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/formatCurrency";
 
 interface Product {
   id: string;
@@ -144,7 +145,7 @@ const ProductCard = ({
         )}
 
         <div className="flex items-center justify-between">
-          <span className="font-semibold text-lg">${Number(product.price).toFixed(0)}</span>
+          <span className="font-semibold text-lg">{formatPrice(product.price)}</span>
           {product.colors && product.colors.length > 0 && (
             <div className="flex items-center gap-1">
               {product.colors.slice(0, 4).map((color, i) => (

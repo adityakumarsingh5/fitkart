@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { Heart, Loader2, Trash2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/formatCurrency";
 
 const WishlistPage = () => {
   const { items, isLoading, removeFromWishlist } = useWishlist();
@@ -96,7 +97,7 @@ const WishlistPage = () => {
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-widest">{item.product?.brand}</p>
                       <h3 className="font-medium">{item.product?.name}</h3>
-                      <p className="font-semibold text-lg mt-1">${Number(item.product?.price).toFixed(0)}</p>
+                      <p className="font-semibold text-lg mt-1">{formatPrice(item.product?.price || 0)}</p>
                     </div>
 
                     {/* Size Selection */}
