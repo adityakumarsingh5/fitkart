@@ -16,10 +16,16 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface BodyMeasurements {
+  weight?: number;
+  height?: number;
+}
+
 interface ProfileUpdate {
   full_name?: string;
   avatar_url?: string;
   style_preferences?: string[];
+  body_measurements?: BodyMeasurements;
 }
 
 export const useProfile = () => {
@@ -47,9 +53,15 @@ export const useProfile = () => {
     mutationFn: async (updates: ProfileUpdate) => {
       if (!user?.id) throw new Error('Not authenticated');
       
+      // Cast body_measurements to Json type for Supabase
+      const supabaseUpdates: Record<string, any> = { ...updates };
+      if (updates.body_measurements) {
+        supabaseUpdates.body_measurements = updates.body_measurements as unknown as Json;
+      }
+      
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(supabaseUpdates)
         .eq('user_id', user.id);
       
       if (error) throw error;
