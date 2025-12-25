@@ -1,6 +1,7 @@
 import { Heart, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { formatPrice } from "@/lib/formatCurrency";
 
 interface Product {
   id: number;
@@ -18,8 +19,8 @@ const products: Product[] = [
     id: 1,
     name: "Tailored Wool Blazer",
     brand: "Modern Classics",
-    price: 299,
-    originalPrice: 399,
+    price: 3499,
+    originalPrice: 4499,
     image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop",
     category: "Outerwear",
     isNew: true,
@@ -28,7 +29,7 @@ const products: Product[] = [
     id: 2,
     name: "Silk Evening Dress",
     brand: "Elegance",
-    price: 459,
+    price: 4599,
     image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop",
     category: "Dresses",
   },
@@ -36,7 +37,7 @@ const products: Product[] = [
     id: 3,
     name: "Premium Cotton Shirt",
     brand: "Essential",
-    price: 129,
+    price: 1299,
     image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&auto=format&fit=crop",
     category: "Tops",
     isNew: true,
@@ -45,8 +46,8 @@ const products: Product[] = [
     id: 4,
     name: "High-Waist Trousers",
     brand: "Modern Classics",
-    price: 189,
-    originalPrice: 249,
+    price: 1899,
+    originalPrice: 2499,
     image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&auto=format&fit=crop",
     category: "Bottoms",
   },
@@ -54,7 +55,7 @@ const products: Product[] = [
     id: 5,
     name: "Cashmere Sweater",
     brand: "Luxe Knit",
-    price: 349,
+    price: 3499,
     image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&auto=format&fit=crop",
     category: "Knitwear",
   },
@@ -62,7 +63,7 @@ const products: Product[] = [
     id: 6,
     name: "Leather Midi Skirt",
     brand: "Edge",
-    price: 279,
+    price: 2799,
     image: "https://images.unsplash.com/photo-1583496661160-fb5886a0uj7a?w=600&auto=format&fit=crop",
     category: "Bottoms",
     isNew: true,
@@ -121,10 +122,10 @@ const ProductCard = ({ product }: { product: Product }) => {
           {product.name}
         </h3>
         <div className="flex items-center gap-2">
-          <span className="font-semibold">${product.price}</span>
+          <span className="font-semibold">{formatPrice(product.price)}</span>
           {product.originalPrice && (
             <span className="text-sm text-muted-foreground line-through">
-              ${product.originalPrice}
+              {formatPrice(product.originalPrice)}
             </span>
           )}
         </div>
