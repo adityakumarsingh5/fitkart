@@ -9,7 +9,7 @@ import { formatPrice } from "@/lib/formatCurrency";
 import { useEffect } from "react";
 
 const CartPage = () => {
-  const { items, isLoading, updateQuantity, removeFromCart, cartTotal } = useCart();
+  const { items, isLoading, updateQuantity, removeFromCart, cartTotal, checkout, isCheckingOut } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -140,9 +140,24 @@ const CartPage = () => {
                     </div>
                   </div>
 
-                  <Button variant="gold" className="w-full" size="lg">
-                    Proceed to Checkout
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                  <Button 
+                    variant="gold" 
+                    className="w-full" 
+                    size="lg"
+                    onClick={checkout}
+                    disabled={isCheckingOut}
+                  >
+                    {isCheckingOut ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        Proceed to Checkout
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    )}
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center mt-4">

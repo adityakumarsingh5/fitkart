@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 export interface CartItem {
   id: string;
@@ -23,6 +24,7 @@ export interface CartItem {
 export const useCart = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const cartQuery = useQuery({
     queryKey: ['cart', user?.id],
@@ -133,6 +135,42 @@ export const useCart = () => {
 
   const cartCount = cartQuery.data?.reduce((count, item) => count + item.quantity, 0) || 0;
 
+  const checkout = async () => {
+    if (!user) {
+      toast.error('Please sign in to checkout');
+      return;
+    }
+
+    if (!cartQuery.data || cartQuery.data.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: {
+          items: cartQuery.data,
+          successUrl: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/checkout/cancel`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast.error(error.message || 'Failed to start checkout');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
   return {
     items: cartQuery.data || [],
     isLoading: cartQuery.isLoading,
@@ -141,5 +179,7 @@ export const useCart = () => {
     removeFromCart,
     cartTotal,
     cartCount,
+    checkout,
+    isCheckingOut,
   };
 };
