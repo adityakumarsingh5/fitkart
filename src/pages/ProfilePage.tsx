@@ -6,13 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, BodyMeasurements } from "@/hooks/useProfile";
-import { User, Loader2, Scale } from "lucide-react";
+import { useOrders } from "@/hooks/useOrders";
+import { User, Loader2, Scale, Package, ShoppingBag } from "lucide-react";
+import { formatPrice } from "@/lib/formatCurrency";
+import { format } from "date-fns";
 
 const ProfilePage = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, isLoading: profileLoading, updateProfile } = useProfile();
+  const { orders, isLoading: ordersLoading } = useOrders();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState("");
@@ -184,6 +189,84 @@ const ProfilePage = () => {
                   <p className="text-xs text-muted-foreground">
                     These measurements help us provide accurate size recommendations when you use the virtual try-on feature.
                   </p>
+                </CardContent>
+              </Card>
+
+              {/* Order History */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Order History
+                  </CardTitle>
+                  <CardDescription>
+                    View your past orders and their status
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {ordersLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : orders.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                        <ShoppingBag className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-muted-foreground mb-4">No orders yet</p>
+                      <Button variant="outline" onClick={() => navigate('/shop')}>
+                        Start Shopping
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div 
+                          key={order.id} 
+                          className="border border-border rounded-lg p-4 space-y-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-muted-foreground">
+                                Order #{order.id.slice(-8).toUpperCase()}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(order.created_at), 'MMM dd, yyyy • h:mm a')}
+                              </p>
+                            </div>
+                            <Badge 
+                              variant={
+                                order.status === 'completed' ? 'default' :
+                                order.status === 'pending' ? 'secondary' :
+                                order.status === 'cancelled' ? 'destructive' : 'outline'
+                              }
+                            >
+                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {order.items.map((item, index) => (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                  {item.product_name} × {item.quantity}
+                                  <span className="ml-2 text-xs">
+                                    (Size: {item.size}{item.color ? `, ${item.color}` : ''})
+                                  </span>
+                                </span>
+                                <span>{formatPrice(item.price * item.quantity)}</span>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="border-t border-border pt-2 flex justify-between font-medium">
+                            <span>Total</span>
+                            <span>{formatPrice(order.total_amount)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
