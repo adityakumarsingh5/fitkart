@@ -83,6 +83,7 @@ serve(async (req) => {
     }));
 
     // Create Stripe Checkout Session
+    // Note: For India-based Stripe accounts, billing/shipping address is required for export transactions
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -90,6 +91,10 @@ serve(async (req) => {
       success_url: successUrl || `${req.headers.get("origin")}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/checkout/cancel`,
       customer_email: user.email,
+      billing_address_collection: "required",
+      shipping_address_collection: {
+        allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "IT", "ES", "NL", "BE", "AT", "CH", "SE", "NO", "DK", "FI", "IE", "PT", "PL", "CZ", "HU", "RO", "BG", "HR", "SK", "SI", "LT", "LV", "EE", "MT", "CY", "LU", "GR", "JP", "KR", "SG", "HK", "TW", "MY", "TH", "PH", "ID", "VN", "IN", "AE", "SA", "QA", "KW", "BH", "OM", "ZA", "NG", "KE", "EG", "MX", "BR", "AR", "CL", "CO", "PE", "NZ"],
+      },
       metadata: {
         user_id: user.id,
       },
